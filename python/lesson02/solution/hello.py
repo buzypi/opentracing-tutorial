@@ -3,21 +3,21 @@ import time
 from lib.tracing import init_tracer
 
 def say_hello(hello_to):
-    with tracer.start_active_span('say-hello') as scope:
-        scope.span.set_tag('hello-to', hello_to)
-        hello_str = format_string(hello_to)
-        print_hello(hello_str)
+    with tracer.start_span('say-hello') as span:
+        span.set_tag('hello-to', hello_to)
+        hello_str = format_string(hello_to, span)
+        print_hello(hello_str, span)
 
-def format_string(hello_to):
-    with tracer.start_active_span('format') as scope:
+def format_string(hello_to, parent_span):
+    with tracer.start_span('format', child_of=parent_span) as span:
         hello_str = 'Hello, %s!' % hello_to
-        scope.span.log_kv({'event': 'string-format', 'value': hello_str})
+        span.log_kv({'event': 'string-format', 'value': hello_str})
         return hello_str
 
-def print_hello(hello_str):
-    with tracer.start_active_span('println') as scope:
+def print_hello(hello_str, parent_span):
+    with tracer.start_span('println', child_of=parent_span) as span:
         print(hello_str)
-        scope.span.log_kv({'event': 'println'})
+        span.log_kv({'event': 'println'})
 
 # main
 assert len(sys.argv) == 2
